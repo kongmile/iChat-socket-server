@@ -1,0 +1,13 @@
+{
+  "name": "ichat-socket-server",
+  "version": "0.0.1",
+  "description": "socket server for ichat",
+  "dependencies": {
+    "jsonwebtoken": "^8.1.0",
+    "redis": "^2.8.0",
+    "socket.io": "^2.0.4"
+  },
+  "devDependencies": {
+    "express": "^4.16.2"
+  }
+}
