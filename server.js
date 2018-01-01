@@ -24,6 +24,19 @@ io.on('connection', function(socket){
                 socket.emit('authenticate failed');
             } else {
                 online(decoded);
+                client.zcard('msg:' + decoded.sub, function(err, reply) {
+                    if(reply) {
+                        console.log('offlinemsgcount:' + reply);
+                        client.zrange(['msg:' + decoded.sub, 0, reply], function(err, reply) {
+                            if(reply) {
+                                reply.forEach(function(v, key, a) {
+                                    socket.emit(JSON.parse(v).event, JSON.parse(v));
+                                    client.zremrangebyrank(['msg:' + decoded.sub, 0, 0]);
+                                });
+                            }
+                        });
+                    }
+                });
             }
         });
     });
@@ -62,9 +75,12 @@ sub.on('pmessage', function(pattern, channel, message) {
     var data = JSON.parse(message);
     var to = channel.replace('chat.user.', '');
     client.get('isOnline:' + to, function (err, reply) {
+        var event = data.event.replace('App\\Events\\', '');
         if(reply) {
-            var event = data.event.replace('App\\Events\\', '');
             socketMap[to].emit(event, data.data);
+        } else {
+            data.data.event = event;
+            client.zadd(['msg:' + to, Date.now(), JSON.stringify(data.data)]);
         }
     })
 });
